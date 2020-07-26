@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.experiment import deterministic
+from garage.np.policies import flatten_if_unflattened, flatten_n_if_unflattened
 from garage.tf.models import GaussianMLPModel
 from garage.tf.policies.task_embedding_policy import TaskEmbeddingPolicy
 
@@ -232,6 +233,8 @@ class GaussianMLPTaskEmbeddingPolicy(GaussianMLPModel, TaskEmbeddingPolicy):
                     A is the dimension of action.
 
         """
+        observation = flatten_if_unflattened(self.observation_space,
+                                             observation)
         obs, task = self.split_augmented_observation(observation)
         return self.get_action_given_task(obs, task)
 
@@ -257,6 +260,8 @@ class GaussianMLPTaskEmbeddingPolicy(GaussianMLPModel, TaskEmbeddingPolicy):
                     environment steps, Z is the dimension of action.
 
         """
+        observations = flatten_n_if_unflattened(self.observation_space,
+                                                observations)
         obses, tasks = zip(*[
             self.split_augmented_observation(aug_obs)
             for aug_obs in observations

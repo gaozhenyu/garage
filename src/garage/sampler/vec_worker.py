@@ -147,14 +147,22 @@ class VecWorker(DefaultWorker):
 
     def _gather_rollout(self, rollout_number, last_observation):
         assert 0 < self._path_lengths[rollout_number] <= self._max_path_length
+        env_infos_numpy = {
+            key: np.array(value)
+            for key, value in self._env_infos[rollout_number].items()
+        }
+        agent_infos_numpy = {
+            key: np.array(value)
+            for key, value in self._agent_infos[rollout_number].items()
+        }
         traj = TrajectoryBatch(
             self._envs[rollout_number].spec,
             np.asarray(self._observations[rollout_number]),
             np.asarray([last_observation]),
             np.asarray(self._actions[rollout_number]),
             np.asarray(self._rewards[rollout_number]),
-            np.asarray(self._terminals[rollout_number]),
-            self._env_infos[rollout_number], self._agent_infos[rollout_number],
+            np.asarray(self._terminals[rollout_number]), env_infos_numpy,
+            agent_infos_numpy,
             np.asarray([self._path_lengths[rollout_number]], dtype='l'))
         self._completed_rollouts.append(traj)
         self._observations[rollout_number] = []
@@ -163,6 +171,8 @@ class VecWorker(DefaultWorker):
         self._terminals[rollout_number] = []
         self._path_lengths[rollout_number] = 0
         self._prev_obs[rollout_number] = self._envs[rollout_number].reset()
+        self._env_infos[rollout_number] = collections.defaultdict(list)
+        self._agent_infos[rollout_number] = collections.defaultdict(list)
 
     def step_rollout(self):
         """Take a single time-step in the current rollout.
